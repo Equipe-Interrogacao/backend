@@ -1,0 +1,77 @@
+# ─── Python ───────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+ENV/
+pip-wheel-metadata/
+
+# ─── Node / Frontend ──────────────────────────────────────
+node_modules/
+.npm
+.yarn/
+.pnp.*
+dist/
+.next/
+.nuxt/
+.vite/
+out/
+
+# ─── Environment / Secrets ────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+
+# ─── Claude ───────────────────────────────────────────────
+.claude/
+
+# ─── IDEs ─────────────────────────────────────────────────
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.user
+*.swp
+*~
+
+# ─── OS ───────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Logs ─────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── Tests / Coverage ─────────────────────────────────────
+.coverage
+htmlcov/
+.pytest_cache/
+coverage/
+.nyc_output/
+
+# ─── Geodados / Dados pesados ─────────────────────────────
+*.shp
+*.dbf
+*.shx
+*.prj
+*.geojson.gz
+*.gpkg
+*.mbtiles
+data/raw/
+data/processed/
