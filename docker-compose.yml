@@ -1,0 +1,86 @@
+networks:
+  rede_asg:
+    driver: bridge
+
+services:
+  postgres:
+    container_name: postgres-container
+    image: postgis/postgis:16-3.4
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=asg_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - asg_db_data:/var/lib/postgresql/data
+    networks:
+      - rede_asg
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d asg_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  controller-gerenciamento-banco:
+    build: ./services/gerenciamento_banco
+    container_name: controller-gerenciamento-banco
+    ports:
+      - "8004:8000"
+    env_file:
+      - .env
+    networks:
+      - rede_asg
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  controller-ingestao:
+    build: ./services/ingestao
+    container_name: controller-ingestao
+    ports:
+      - "8001:8000"
+    env_file:
+      - .env
+    networks:
+      - rede_asg
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  controller-cruzamento-asg:
+    build: ./services/cruzamento_asg
+    container_name: controller-cruzamento-asg
+    ports:
+      - "8002:8000"
+    env_file:
+      - .env
+    networks:
+      - rede_asg
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  controller-busca-semantica:
+    build: ./services/busca_semantica
+    container_name: controller-busca-semantica
+    ports:
+      - "8003:8000"
+    env_file:
+      - .env
+    networks:
+      - rede_asg
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+# Volume externo — criado manualmente via scripts/setup_volume.ps1
+# "docker compose down -v" NAO apaga este volume.
+volumes:
+  asg_db_data:
+    external: true
