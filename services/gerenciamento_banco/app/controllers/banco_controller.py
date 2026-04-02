@@ -5,8 +5,22 @@ from app.services.banco_service import BancoService
 service = BancoService()
 
 
-def listar_propriedades(db: Session):
-    return service.listar_propriedades(db)
+def listar_propriedades(
+    db: Session,
+    uf: str | None,
+    municipio: str | None,
+    status_imovel: str | None,
+    limit: int,
+    offset: int,
+):
+    return service.listar_propriedades(
+        db,
+        uf=uf,
+        municipio=municipio,
+        status_imovel=status_imovel,
+        limit=limit,
+        offset=offset,
+    )
 
 
 def buscar_propriedade(id: int, db: Session):
@@ -16,8 +30,15 @@ def buscar_propriedade(id: int, db: Session):
     return propriedade
 
 
-def criar_propriedade(dados: dict, db: Session):
-    return service.criar_propriedade(db, dados)
+def buscar_por_cod_imovel(cod_imovel: str, db: Session):
+    propriedade = service.buscar_por_cod_imovel(db, cod_imovel)
+    if not propriedade:
+        raise HTTPException(status_code=404, detail="Propriedade não encontrada")
+    return propriedade
+
+
+def upsert_propriedade(dados: dict, db: Session):
+    return service.upsert_propriedade(db, dados)
 
 
 def deletar_propriedade(id: int, db: Session):
@@ -25,3 +46,8 @@ def deletar_propriedade(id: int, db: Session):
     if not propriedade:
         raise HTTPException(status_code=404, detail="Propriedade não encontrada")
     return {"mensagem": f"Propriedade {id} deletada com sucesso"}
+
+
+def stats_por_uf(db: Session):
+    rows = service.contar_por_uf(db)
+    return [{"uf": r[0], "total": r[1]} for r in rows]
