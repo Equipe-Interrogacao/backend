@@ -51,3 +51,9 @@ def deletar_propriedade(id: int, db: Session):
 def stats_por_uf(db: Session):
     rows = service.contar_por_uf(db)
     return [{"uf": r[0], "total": r[1]} for r in rows]
+
+def obter_geometria(cod_imovel: str, db: Session):
+    resultado = service.obter_geometria_geojson(db, cod_imovel)
+    if not resultado:
+        raise HTTPException(status_code=404, detail="Código CAR não encontrado")
+    return resultado

@@ -8,6 +8,22 @@ from app.schemas.propriedade_schema import PropriedadeCreate, PropriedadeRespons
 
 router = APIRouter(prefix="/banco", tags=["Gerenciamento do Banco"])
 
+@router.get(
+    "/imovel/{cod_imovel:path}/geometria",
+    summary="Obter geometria GeoJSON (SCRUM-4)",
+    responses={
+        404: {"description": "CAR não encontrado"},
+        500: {"description": "Erro interno no processamento geoespacial"}
+    }
+)
+def obter_geometria(cod_imovel: str, db: Session = Depends(get_db)):
+    try:
+        return banco_controller.obter_geometria_geojson(cod_imovel, db)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
+
 
 @router.get(
     "/propriedades",

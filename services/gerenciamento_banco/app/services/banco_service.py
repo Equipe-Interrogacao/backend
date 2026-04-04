@@ -57,3 +57,31 @@ class BancoService:
             .group_by(Propriedade.uf)
             .all()
         )
+    
+    def obter_geometria_geojson(self, db: Session, cod_imovel: str):
+        """
+        Busca geometria no PostGIS, converte para EPSG:4674 e retorna GeoJSON + BBOX.
+        O uso de filtros sobre 'cod_imovel' aproveita o índice unique.
+        """
+        sql = text("""
+            SELECT 
+                cod_imovel,
+                area,
+                ST_AsGeoJSON(ST_Transform(geometria, 4674)) as geojson,
+                ST_Extent(ST_Transform(geometria, 4674)) OVER() as bbox
+            FROM propriedades
+            WHERE cod_imovel = :cod
+        """)
+        
+        result = db.execute(sql, {"cod": cod_imovel}).first()
+        
+        if not result:
+            return None
+            
+        return {
+            "codigo_car": result.cod_imovel,
+            "area_ha": result.area,
+            "geojson": json.loads(result.geojson),
+            "bbox": str(result.bbox) if result.bbox else None
+        }
+        
