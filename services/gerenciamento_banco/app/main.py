@@ -1,8 +1,22 @@
+import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from app.config.database import engine, Base
 from app.routes.banco_routes import router
+from app.routes.imovel_routes import router as imovel_router
 
-Base.metadata.create_all(bind=engine)
+# Registra modelos no metadata antes do create_all
+from app.models.imovel import Imovel  # noqa: F401
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Cria tabelas na subida. Em testes, definir SKIP_DB_INIT=1 para não conectar ao Postgres."""
+    if os.getenv("SKIP_DB_INIT") != "1":
+        Base.metadata.create_all(bind=engine)
+    yield
+
 
 tags_metadata = [
     {
@@ -11,6 +25,10 @@ tags_metadata = [
             "CRUD de propriedades rurais no banco de dados PostgreSQL + PostGIS. "
             "Ponto central de leitura e escrita geoespacial do sistema."
         ),
+    },
+    {
+        "name": "Imóvel CAR",
+        "description": "Consulta de imóvel por código CAR na tabela imovel (SCRUM-3).",
     },
 ]
 
@@ -25,6 +43,8 @@ app = FastAPI(
     openapi_tags=tags_metadata,
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 app.include_router(router)
+app.include_router(imovel_router)
