@@ -6,12 +6,15 @@ from fastapi import FastAPI
 
 from app.config.database import engine, Base
 from app.routes.ingestao_routes import router
+from app.routes.car_kml_routes import router as car_kml_router
+from app.services.car_kml_store import init_car_kml_store
 
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    init_car_kml_store()
     for tentativa in range(1, 16):
         try:
             Base.metadata.create_all(bind=engine)
@@ -35,6 +38,10 @@ tags_metadata = [
             "Use POST /ingestao/sicar/ingerir para baixar todos os imóveis de um estado."
         ),
     },
+    {
+        "name": "Ingestão — CAR KML (MVP)",
+        "description": "Consulta a propriedades extraídas do KML CAR em memória (protótipo /app).",
+    },
 ]
 
 app = FastAPI(
@@ -52,3 +59,4 @@ app = FastAPI(
 )
 
 app.include_router(router)
+app.include_router(car_kml_router)
