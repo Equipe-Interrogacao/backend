@@ -150,6 +150,45 @@ docker exec -it postgres-container psql -U postgres -d asg_db
 
 ---
 
+## Busca de imóvel por CAR (SCRUM-3) — `gerenciamento_banco` (porta 8004)
+
+| Método | Caminho | Descrição |
+|--------|---------|-----------|
+| GET | `/imovel?car={codigo}` | Consulta a tabela **`imovel`** (PostGIS). Resposta: `codigo_car`, `area_ha`, `municipio`, `situacao`, `dt_inscricao`, `dt_analise`. |
+
+**Validação do CAR:** numérico com **11 a 20 dígitos**, ou formato federal `UF-0000000-{32 hex}` (ex.: `SP-3525300-44AA2FE43D774264B9F18E55658E70FA`).
+
+**HTTP:** `400` formato inválido · `404` não encontrado · `500` erro no banco.
+
+Na primeira subida do serviço, o SQLAlchemy cria a tabela `imovel` se não existir. Para testar com dados reais, é preciso **inserir registos** em `imovel` (ou script de migração/seed).
+
+### Testes unitários (`gerenciamento_banco`)
+
+Com Docker e Postgres a correr:
+
+```powershell
+cd backend
+docker compose run --rm --entrypoint pytest controller-gerenciamento-banco tests/ -q --cov=app --cov-fail-under=80
+```
+
+Para testes locais sem tocar no Postgres, o código usa `SKIP_DB_INIT=1` (definido no `tests/conftest.py`).
+
+---
+
+## Endpoints CAR KML (MVP — memória)
+
+No serviço **Ingestão** (`8001`), além de `/ingestao/propriedades` (PostgreSQL), existem rotas que replicam o protótipo da pasta `/app`:
+
+| Método | Caminho | Descrição |
+|--------|---------|-----------|
+| GET | `/ingestao/car-kml/health` | Total de propriedades carregadas do KML |
+| GET | `/ingestao/car-kml/propriedades` | Lista `cod_car`, `municipio`, `latitude`, `longitude` |
+| GET | `/ingestao/car-kml/propriedades/{cod_car}` | Uma propriedade pelo código CAR |
+
+O ficheiro **`services/ingestao/data/car_propriedades.kml`** é lido na **subida** do contentor. Se o KML for só *NetworkLink*, é necessária **internet** nessa fase. Estes dados **não** são persistidos na base.
+
+---
+
 ## Documentação automática (Swagger)
 
 Cada serviço expõe documentação interativa via FastAPI:
