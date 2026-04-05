@@ -26,6 +26,8 @@ class PropriedadeResponse(PropriedadeBase):
     def serialize_geometria(cls, v):
         if v is None:
             return None
+        if isinstance(v, dict):
+            return v
         try:
             from geoalchemy2.shape import to_shape
             from shapely.geometry import mapping
