@@ -13,7 +13,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - asg_db_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     networks:
       - rede_asg
     healthcheck:
@@ -79,8 +79,19 @@ services:
         condition: service_healthy
     restart: on-failure
 
-# Volume externo — criado manualmente via scripts/setup_volume.ps1
-# "docker compose down -v" NAO apaga este volume.
+  frontend:
+    build: ../frontend
+    container_name: frontend
+    ports:
+      - "3000:80"
+    networks:
+      - rede_asg
+    depends_on:
+      - controller-gerenciamento-banco
+      - controller-ingestao
+      - controller-cruzamento-asg
+      - controller-busca-semantica
+    restart: on-failure
+
 volumes:
-  asg_db_data:
-    external: true
+  postgres-data:
