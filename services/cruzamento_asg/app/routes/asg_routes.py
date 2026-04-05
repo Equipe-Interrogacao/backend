@@ -38,5 +38,5 @@ def buscar(cod_car: str, db: Session = Depends(get_db)):
     summary="Criar análise ASG",
     description="Registra uma nova análise ASG para uma propriedade rural.",
 )
-def criar(payload: AnaliseASGBase, db: Session = Depends(get_db)):
-    return asg_controller.criar_analise(payload.model_dump(), db)
+async def criar(payload: AnaliseASGBase, db: Session = Depends(get_db)):
+    return await asg_controller.criar_analise(payload.model_dump(), db)

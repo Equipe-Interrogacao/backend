@@ -34,13 +34,15 @@ class IngestaoService:
 
     async def buscar_ou_ingerir_por_cod(self, db: Session, cod_imovel: str):
         """
-        Busca o imóvel no banco local.
-        Se não encontrado, consulta o SICAR, salva no banco e retorna.
+        Busca primeiro no gerenciamento_banco (HTTP).
+        Se não encontrado, consulta o SICAR WFS, salva no banco e retorna.
         Retorna None se não encontrado em nenhuma fonte.
         """
-        propriedade = self.buscar_por_cod_imovel(db, cod_imovel)
-        if propriedade:
-            return propriedade
+        from app.clients.gerenciamento_banco_client import buscar_por_car
+        dado = await buscar_por_car(cod_imovel)
+        if dado:
+            logger.info(f"CAR {cod_imovel} encontrado via gerenciamento_banco.")
+            return dado
 
         logger.info(f"CAR {cod_imovel} não está no banco — buscando no SICAR.")
         feature = await buscar_imovel_por_cod(cod_imovel)

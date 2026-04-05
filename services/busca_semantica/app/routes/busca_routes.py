@@ -18,8 +18,8 @@ router = APIRouter(prefix="/busca", tags=["Busca Semântica"])
         "e retorna uma resposta com fontes rastreáveis."
     ),
 )
-def consultar(payload: ConsultaCreate, db: Session = Depends(get_db)):
-    return busca_controller.realizar_consulta(payload, db)
+async def consultar(payload: ConsultaCreate, db: Session = Depends(get_db)):
+    return await busca_controller.realizar_consulta(payload, db)
 
 
 @router.get(
