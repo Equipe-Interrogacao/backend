@@ -1,39 +1,83 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from sqlalchemy.orm import Session
+
 from app.config.database import get_db
 from app.controllers import ingestao_controller
-from app.schemas.propriedade_schema import PropriedadeBase, PropriedadeResponse
+from app.schemas.propriedade_schema import (
+    PropriedadeBase,
+    PropriedadeResponse,
+    IngestaoStatusResponse,
+)
 
 router = APIRouter(prefix="/ingestao", tags=["Ingestão"])
 
+
+# --------------------------------------------------------------------------- #
+# Consulta de propriedades já ingeridas
+# --------------------------------------------------------------------------- #
 
 @router.get(
     "/propriedades",
     response_model=list[PropriedadeResponse],
     summary="Listar propriedades",
-    description="Retorna todas as propriedades rurais cadastradas no banco.",
+    description="Retorna propriedades rurais cadastradas no banco com paginação.",
 )
-def listar(db: Session = Depends(get_db)):
-    return ingestao_controller.listar_propriedades(db)
+def listar(
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    return ingestao_controller.listar_propriedades(db, limit=limit, offset=offset)
 
 
 @router.get(
-    "/propriedades/{cod_car}",
+    "/propriedades/{cod_imovel:path}",
     response_model=PropriedadeResponse,
-    summary="Buscar propriedade por CAR",
-    description="Retorna os dados cadastrais de uma propriedade a partir do código CAR.",
+    summary="Buscar propriedade por código CAR",
+    description="Retorna dados de uma propriedade pelo código CAR (cod_imovel).",
     responses={404: {"description": "Propriedade não encontrada"}},
 )
-def buscar(cod_car: str, db: Session = Depends(get_db)):
-    return ingestao_controller.buscar_propriedade(cod_car, db)
+async def buscar(cod_imovel: str, db: Session = Depends(get_db)):
+    return await ingestao_controller.buscar_propriedade(cod_imovel, db)
 
 
 @router.post(
     "/propriedades",
     response_model=PropriedadeResponse,
     status_code=201,
-    summary="Criar propriedade",
-    description="Cadastra uma nova propriedade rural a partir dos dados fornecidos.",
+    summary="Upsert de propriedade",
+    description="Insere ou atualiza uma propriedade pelo código CAR.",
 )
-def criar(payload: PropriedadeBase, db: Session = Depends(get_db)):
-    return ingestao_controller.criar_propriedade(payload.model_dump(), db)
+def upsert(payload: PropriedadeBase, db: Session = Depends(get_db)):
+    return ingestao_controller.upsert_propriedade(payload.model_dump(), db)
+
+
+# --------------------------------------------------------------------------- #
+# Ingestão SICAR via WFS
+# --------------------------------------------------------------------------- #
+
+@router.post(
+    "/sicar/ingerir",
+    status_code=202,
+    summary="Iniciar ingestão SICAR",
+    description=(
+        "Dispara a ingestão em background de todos os imóveis rurais de um estado "
+        "a partir da API WFS pública do SICAR (consulta.car.gov.br). "
+        "O processo é idempotente — re-execuções atualizam registros existentes."
+    ),
+)
+def iniciar_ingestao(
+    estado: str = Query("SP", description="Sigla do estado (ex: SP, MG, RJ)"),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+):
+    return ingestao_controller.iniciar_ingestao_sicar(estado, background_tasks)
+
+
+@router.get(
+    "/sicar/status",
+    response_model=IngestaoStatusResponse,
+    summary="Status da ingestão SICAR",
+    description="Retorna o progresso atual (ou último resultado) da ingestão SICAR.",
+)
+def status_ingestao():
+    return ingestao_controller.status_ingestao()

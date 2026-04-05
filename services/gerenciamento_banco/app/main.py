@@ -1,7 +1,10 @@
+import asyncio
+import logging
 import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+
 from app.config.database import engine, Base
 from app.routes.banco_routes import router
 from app.routes.imovel_routes import router as imovel_router
@@ -9,12 +12,24 @@ from app.routes.imovel_routes import router as imovel_router
 # Registra modelos no metadata antes do create_all
 from app.models.imovel import Imovel  # noqa: F401
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Cria tabelas na subida. Em testes, definir SKIP_DB_INIT=1 para não conectar ao Postgres."""
     if os.getenv("SKIP_DB_INIT") != "1":
-        Base.metadata.create_all(bind=engine)
+        for tentativa in range(1, 16):
+            try:
+                Base.metadata.create_all(bind=engine)
+                logger.info("Tabelas criadas/verificadas com sucesso.")
+                break
+            except Exception as exc:
+                logger.warning(f"create_all tentativa {tentativa}/15 falhou: {exc}")
+                if tentativa < 15:
+                    await asyncio.sleep(3)
+                else:
+                    logger.error("Não foi possível criar as tabelas após 15 tentativas.")
     yield
 
 
