@@ -33,21 +33,35 @@ Conteúdo padrão do `.env`:
 DATABASE_URL=postgresql://postgres:postgres@postgres:5432/asg_db
 ```
 
-> `postgres` no host da URL é o nome do serviço Docker — funciona dentro da rede. Para rodar um serviço localmente fora do Docker, troque por `localhost`.
+> `postgres` no host da URL é o nome do serviço Docker — funciona dentro da rede. Para rodar localmente fora do Docker, troque por `localhost`.
 
 ---
 
-## 2. Criar a network
+## 2. Criar o volume protegido (apenas na primeira vez)
+
+O volume do banco é **externo** — não é apagado por `docker compose down -v`.
+
+Execute **uma única vez** antes do primeiro `docker compose up`:
+
+```powershell
+.\scripts\setup_volume.ps1
+```
+
+Ou manualmente:
+
+```powershell
+docker volume create asg_db_data
+```
+
+> Se o volume não existir, o `docker compose up` falhará com `volume not found`.
+
+---
+
+## 3. Criar a network
 
 A network `rede_asg` é criada automaticamente pelo `docker-compose.yml`. Não é necessário criá-la manualmente.
 
-Caso precise criar manualmente:
-
-```powershell
-docker network create rede_asg
-```
-
-Para verificar se ela existe:
+Verificar se existe:
 
 **PowerShell:**
 ```powershell
@@ -61,7 +75,7 @@ docker network ls | grep rede_asg
 
 ---
 
-## 3. Subir todos os serviços
+## 4. Subir todos os serviços
 
 ```powershell
 docker compose up --build
@@ -75,7 +89,7 @@ docker compose up --build -d
 
 ---
 
-## 4. Subir um serviço específico
+## 5. Subir um serviço específico
 
 ```powershell
 docker compose up --build controller-ingestao
@@ -86,21 +100,47 @@ docker compose up --build controller-gerenciamento-banco
 
 ---
 
-## 5. Derrubar os serviços
+## 6. Derrubar os serviços
 
 ```powershell
 docker compose down
 ```
 
-Para derrubar e remover os volumes (apaga os dados do banco):
+> **Nunca use `docker compose down -v`** — apagaria o volume interno caso exista algum. O volume `asg_db_data` é externo e protegido, mas evite o hábito.
+
+---
+
+## 7. Backup e Restore
+
+### Gerar backup
 
 ```powershell
-docker compose down -v
+.\scripts\backup.ps1
+```
+
+Gera um arquivo `backup_asg_YYYYMMDD_HHmm.sql` na pasta atual.
+
+Ou manualmente:
+
+```powershell
+docker exec postgres-container pg_dump -U postgres asg_db | Out-File -FilePath "backup_asg.sql" -Encoding utf8
+```
+
+### Restaurar backup
+
+```powershell
+.\scripts\restore.ps1 -file backup_asg_20260101_1200.sql
+```
+
+Ou manualmente:
+
+```powershell
+Get-Content backup_asg.sql | docker exec -i postgres-container psql -U postgres -d asg_db
 ```
 
 ---
 
-## 6. Ver logs
+## 8. Ver logs
 
 Todos os serviços:
 
@@ -120,7 +160,7 @@ docker compose logs -f postgres
 
 ---
 
-## 7. Reconstruir a imagem de um serviço
+## 9. Reconstruir a imagem de um serviço
 
 Use quando alterar o código ou o `requirements.txt`:
 
@@ -130,7 +170,7 @@ docker compose build controller-ingestao
 
 ---
 
-## 8. Acessar o banco de dados
+## 10. Acessar o banco de dados
 
 ```powershell
 docker exec -it postgres-container psql -U postgres -d asg_db
