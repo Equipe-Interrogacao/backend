@@ -1,0 +1,499 @@
+{
+  "info": {
+    "name": "ASG — API Completa",
+    "_postman_id": "asg-api-collection-v1",
+    "description": "Collection completa da plataforma ASG.\n\nServiços:\n- **Gerenciamento do Banco** → :8004\n- **Ingestão de Dados** → :8001\n- **Cruzamento ASG** → :8002\n- **Busca Semântica** → :8003\n\nVariáveis de ambiente configuradas na própria collection (sem precisar de Environment separado).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "url_banco",     "value": "http://localhost:8004" },
+    { "key": "url_ingestao",  "value": "http://localhost:8001" },
+    { "key": "url_cruzamento","value": "http://localhost:8002" },
+    { "key": "url_busca",     "value": "http://localhost:8003" },
+    { "key": "cod_car",       "value": "SP-3525300-44AA2FE43D774264B9F18E55658E70FA" }
+  ],
+  "item": [
+
+    {
+      "name": "Gerenciamento do Banco (:8004)",
+      "item": [
+
+        {
+          "name": "Stats por UF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_banco}}/banco/propriedades/stats",
+              "host": ["{{url_banco}}"],
+              "path": ["banco", "propriedades", "stats"]
+            },
+            "description": "Retorna contagem total de propriedades agrupada por UF."
+          }
+        },
+
+        {
+          "name": "Listar propriedades",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_banco}}/banco/propriedades?uf=SP&limit=10&offset=0",
+              "host": ["{{url_banco}}"],
+              "path": ["banco", "propriedades"],
+              "query": [
+                { "key": "uf",            "value": "SP",  "description": "Sigla do estado" },
+                { "key": "municipio",     "value": "",    "description": "Nome parcial do município", "disabled": true },
+                { "key": "status_imovel", "value": "",    "description": "AT | PE | CA | SU", "disabled": true },
+                { "key": "limit",         "value": "10"  },
+                { "key": "offset",        "value": "0"   }
+              ]
+            },
+            "description": "Lista propriedades com filtros opcionais."
+          }
+        },
+
+        {
+          "name": "Buscar por código CAR",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_banco}}/banco/propriedades/car/{{cod_car}}",
+              "host": ["{{url_banco}}"],
+              "path": ["banco", "propriedades", "car", "{{cod_car}}"]
+            }
+          }
+        },
+
+        {
+          "name": "Buscar por ID interno",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_banco}}/banco/propriedades/1",
+              "host": ["{{url_banco}}"],
+              "path": ["banco", "propriedades", "1"]
+            }
+          }
+        },
+
+        {
+          "name": "Upsert de propriedade",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cod_imovel\": \"SP-3525300-44AA2FE43D774264B9F18E55658E70FA\",\n  \"status_imovel\": \"AT\",\n  \"area\": 150.5,\n  \"condicao\": \"Aguardando análise\",\n  \"uf\": \"SP\",\n  \"municipio\": \"Campinas\",\n  \"cod_municipio_ibge\": \"3509502\",\n  \"tipo_imovel\": \"IRU\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{url_banco}}/banco/propriedades",
+              "host": ["{{url_banco}}"],
+              "path": ["banco", "propriedades"]
+            }
+          }
+        },
+
+        {
+          "name": "Deletar por ID",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url_banco}}/banco/propriedades/1",
+              "host": ["{{url_banco}}"],
+              "path": ["banco", "propriedades", "1"]
+            }
+          }
+        },
+
+        {
+          "name": "Buscar imóvel CAR (tabela imovel)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_banco}}/imovel?car={{cod_car}}",
+              "host": ["{{url_banco}}"],
+              "path": ["imovel"],
+              "query": [{ "key": "car", "value": "{{cod_car}}" }]
+            },
+            "description": "Consulta a tabela `imovel` (PostGIS) pelo código CAR."
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "Ingestão — SICAR (:8001)",
+      "item": [
+
+        {
+          "name": "Iniciar ingestão SICAR",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/sicar/ingerir?estado=SP",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "sicar", "ingerir"],
+              "query": [{ "key": "estado", "value": "SP" }]
+            },
+            "description": "Dispara ingestão em background de todos os imóveis do estado via WFS SICAR. Retorna 202 imediatamente."
+          }
+        },
+
+        {
+          "name": "Status da ingestão SICAR",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/sicar/status",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "sicar", "status"]
+            }
+          }
+        },
+
+        {
+          "name": "Listar propriedades ingeridas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/propriedades?limit=10&offset=0",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "propriedades"],
+              "query": [
+                { "key": "limit",  "value": "10" },
+                { "key": "offset", "value": "0"  }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "Buscar propriedade por CAR",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/propriedades/{{cod_car}}",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "propriedades", "{{cod_car}}"]
+            }
+          }
+        },
+
+        {
+          "name": "Upsert de propriedade",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cod_imovel\": \"SP-3525300-44AA2FE43D774264B9F18E55658E70FA\",\n  \"status_imovel\": \"AT\",\n  \"area\": 150.5,\n  \"uf\": \"SP\",\n  \"municipio\": \"Campinas\",\n  \"tipo_imovel\": \"IRU\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/propriedades",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "propriedades"]
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "Ingestão — CAR KML (:8001)",
+      "item": [
+
+        {
+          "name": "Health / total em memória",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/car-kml/health",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "car-kml", "health"]
+            }
+          }
+        },
+
+        {
+          "name": "Listar propriedades KML",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/car-kml/propriedades",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "car-kml", "propriedades"]
+            }
+          }
+        },
+
+        {
+          "name": "Buscar por código CAR (KML)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/car-kml/propriedades/{{cod_car}}",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "car-kml", "propriedades", "{{cod_car}}"]
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "Ingestão — INPE (:8001)",
+      "item": [
+
+        {
+          "name": "PRODES — Iniciar ingestão",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/inpe/prodes/ingerir?estado=SP",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "inpe", "prodes", "ingerir"],
+              "query": [{ "key": "estado", "value": "SP" }]
+            },
+            "description": "Ingestão dos polígonos anuais de desmatamento (TerraBrasilis WFS). Retorna 202."
+          }
+        },
+
+        {
+          "name": "PRODES — Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/inpe/prodes/status",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "inpe", "prodes", "status"]
+            }
+          }
+        },
+
+        {
+          "name": "DETER — Iniciar ingestão",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/inpe/deter/ingerir?estado=SP",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "inpe", "deter", "ingerir"],
+              "query": [{ "key": "estado", "value": "SP" }]
+            },
+            "description": "Ingestão de alertas em tempo-real de desmatamento (TerraBrasilis WFS). Retorna 202."
+          }
+        },
+
+        {
+          "name": "DETER — Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/inpe/deter/status",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "inpe", "deter", "status"]
+            }
+          }
+        },
+
+        {
+          "name": "Queimadas — Iniciar ingestão",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/inpe/queimadas/ingerir?estado=SP&ano=2024",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "inpe", "queimadas", "ingerir"],
+              "query": [
+                { "key": "estado", "value": "SP"   },
+                { "key": "ano",    "value": "2024" }
+              ]
+            },
+            "description": "Ingestão de focos de incêndio do BDQueimadas filtrados por estado e ano. Retorna 202."
+          }
+        },
+
+        {
+          "name": "Queimadas — Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/inpe/queimadas/status",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "inpe", "queimadas", "status"]
+            }
+          }
+        },
+
+        {
+          "name": "Status por fonte (genérico)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/inpe/prodes/status",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "inpe", "prodes", "status"]
+            },
+            "description": "Rota genérica: substitua 'prodes' por 'deter' ou 'queimadas'."
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "Cruzamento ASG (:8002)",
+      "item": [
+
+        {
+          "name": "Listar análises ASG",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_cruzamento}}/asg/analises",
+              "host": ["{{url_cruzamento}}"],
+              "path": ["asg", "analises"]
+            }
+          }
+        },
+
+        {
+          "name": "Buscar análise por CAR",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_cruzamento}}/asg/analises/{{cod_car}}",
+              "host": ["{{url_cruzamento}}"],
+              "path": ["asg", "analises", "{{cod_car}}"]
+            }
+          }
+        },
+
+        {
+          "name": "Criar análise ASG",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cod_car\": \"SP-3525300-44AA2FE43D774264B9F18E55658E70FA\",\n  \"area_desmatada_ha\": 12.5,\n  \"deficit_app_ha\": 3.2,\n  \"deficit_reserva_legal_ha\": 8.0,\n  \"sobreposicao_uc\": null,\n  \"sobreposicao_ti\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{url_cruzamento}}/asg/analises",
+              "host": ["{{url_cruzamento}}"],
+              "path": ["asg", "analises"]
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "Busca Semântica (:8003)",
+      "item": [
+
+        {
+          "name": "Realizar consulta em linguagem natural",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pergunta\": \"Houve desmatamento recente nesta propriedade?\",\n  \"cod_car\": \"SP-3525300-44AA2FE43D774264B9F18E55658E70FA\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{url_busca}}/busca/consulta",
+              "host": ["{{url_busca}}"],
+              "path": ["busca", "consulta"]
+            },
+            "description": "Recebe pergunta em linguagem natural e retorna resposta com fontes rastreáveis."
+          }
+        },
+
+        {
+          "name": "Listar histórico de consultas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_busca}}/busca/consultas",
+              "host": ["{{url_busca}}"],
+              "path": ["busca", "consultas"]
+            }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "Swagger / Docs",
+      "item": [
+
+        {
+          "name": "Docs — Ingestão",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{url_ingestao}}/docs", "host": ["{{url_ingestao}}"], "path": ["docs"] }
+          }
+        },
+        {
+          "name": "Docs — Cruzamento ASG",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{url_cruzamento}}/docs", "host": ["{{url_cruzamento}}"], "path": ["docs"] }
+          }
+        },
+        {
+          "name": "Docs — Busca Semântica",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{url_busca}}/docs", "host": ["{{url_busca}}"], "path": ["docs"] }
+          }
+        },
+        {
+          "name": "Docs — Gerenciamento do Banco",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{url_banco}}/docs", "host": ["{{url_banco}}"], "path": ["docs"] }
+          }
+        }
+
+      ]
+    }
+
+  ]
+}
