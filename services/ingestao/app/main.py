@@ -9,6 +9,7 @@ from app.config.database import engine, Base
 from app.routes.ingestao_routes import router
 from app.routes.car_kml_routes import router as car_kml_router
 from app.routes.inpe_routes import router as inpe_router
+from app.routes.areas_protegidas_routes import router as areas_protegidas_router
 from app.services.car_kml_store import init_car_kml_store
 
 logger = logging.getLogger(__name__)
@@ -56,6 +57,15 @@ tags_metadata = [
             "e GET /ingestao/inpe/{fonte}/status para acompanhar."
         ),
     },
+    {
+        "name": "Ingestão — Áreas Protegidas",
+        "description": (
+            "Ingestão de camadas de áreas protegidas: "
+            "Unidades de Conservação (ICMBio/CNUC), Terras Indígenas (FUNAI), "
+            "Assentamentos (INCRA) e Territórios Quilombolas (FCP/INCRA). "
+            "Use POST /ingestao/areas-protegidas/{uc|ti|assentamento|quilombola}/ingerir."
+        ),
+    },
 ]
 
 app = FastAPI(
@@ -75,3 +85,4 @@ app = FastAPI(
 app.include_router(router)
 app.include_router(car_kml_router)
 app.include_router(inpe_router)
+app.include_router(areas_protegidas_router)

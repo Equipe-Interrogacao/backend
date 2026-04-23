@@ -11,10 +11,14 @@ from app.config.database import engine, Base, get_db
 from app.routes.banco_routes import router
 from app.routes.imovel_routes import router as imovel_router
 from app.routes.inpe_routes import router as inpe_router
+from app.routes.areas_protegidas_routes import router as areas_protegidas_router
 
 # Registra modelos no metadata antes do create_all
 from app.models.imovel import Imovel  # noqa: F401
 from app.models.inpe_models import DesmatamentoProdes, AlertaDeter, FocoQueimada  # noqa: F401
+from app.models.areas_protegidas_models import (  # noqa: F401
+    UnidadeConservacao, TerraIndigena, Assentamento, Quilombola,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +72,7 @@ app = FastAPI(
 app.include_router(router)
 app.include_router(imovel_router)
 app.include_router(inpe_router)
+app.include_router(areas_protegidas_router)
 
 
 @app.get("/health", tags=["Health"])
@@ -78,6 +83,10 @@ def health(db: Session = Depends(get_db)):
     total_prodes = db.query(func.count(DesmatamentoProdes.id)).scalar() or 0
     total_deter = db.query(func.count(AlertaDeter.id)).scalar() or 0
     total_focos = db.query(func.count(FocoQueimada.id)).scalar() or 0
+    total_uc = db.query(func.count(UnidadeConservacao.id)).scalar() or 0
+    total_ti = db.query(func.count(TerraIndigena.id)).scalar() or 0
+    total_assentamento = db.query(func.count(Assentamento.id)).scalar() or 0
+    total_quilombola = db.query(func.count(Quilombola.id)).scalar() or 0
     return {
         "sicarSpDisponivel": total_sp > 0,
         "total": total,
@@ -85,4 +94,8 @@ def health(db: Session = Depends(get_db)):
         "total_prodes": total_prodes,
         "total_deter": total_deter,
         "total_focos": total_focos,
+        "total_uc": total_uc,
+        "total_ti": total_ti,
+        "total_assentamento": total_assentamento,
+        "total_quilombola": total_quilombola,
     }
