@@ -18,6 +18,7 @@ async def _gerar_resposta(pergunta: str, cod_car: str | None) -> str:
         )
 
     from app.clients.gerenciamento_banco_client import (
+        buscar_areas_protegidas_por_propriedade,
         buscar_por_car,
         buscar_stats_inpe_por_propriedade,
     )
@@ -36,8 +37,8 @@ async def _gerar_resposta(pergunta: str, cod_car: str | None) -> str:
 
     area_info = f", área de {area:.2f} ha" if area else ""
 
-    # Dados INPE espacialmente sobrepostos à propriedade (não ao município)
     inpe = await buscar_stats_inpe_por_propriedade(cod_car)
+    areas = await buscar_areas_protegidas_por_propriedade(cod_car)
 
     partes = [
         f"Propriedade {cod_car} localizada em {municipio}/{uf}{area_info}.",
@@ -62,6 +63,24 @@ async def _gerar_resposta(pergunta: str, cod_car: str | None) -> str:
         partes.append(
             "Nenhuma sobreposição INPE (PRODES/DETER/Queimadas) encontrada para esta propriedade."
         )
+
+    n_uc = len(areas.get("uc", []))
+    n_ti = len(areas.get("ti", []))
+    n_ass = len(areas.get("assentamento", []))
+    n_qui = len(areas.get("quilombola", []))
+
+    if n_uc > 0:
+        nomes_uc = ", ".join(u.get("nome") or u.get("cod_uc") for u in areas["uc"][:3])
+        partes.append(f"Unidades de Conservação sobrepostas: {n_uc} ({nomes_uc}).")
+    if n_ti > 0:
+        nomes_ti = ", ".join(t.get("nome") or t.get("cod_ti") for t in areas["ti"][:3])
+        partes.append(f"Terras Indígenas sobrepostas: {n_ti} ({nomes_ti}).")
+    if n_ass > 0:
+        nomes_ass = ", ".join(a.get("nome") or a.get("cod_sipra") for a in areas["assentamento"][:3])
+        partes.append(f"Assentamentos sobrepostos: {n_ass} ({nomes_ass}).")
+    if n_qui > 0:
+        nomes_qui = ", ".join(q.get("nome") or q.get("cod_quilombola") for q in areas["quilombola"][:3])
+        partes.append(f"Territórios Quilombolas sobrepostos: {n_qui} ({nomes_qui}).")
 
     partes.append(f"Pergunta registrada: {pergunta}")
     return " ".join(partes)

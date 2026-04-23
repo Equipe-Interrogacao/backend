@@ -64,3 +64,25 @@ async def buscar_focos_por_propriedade(cod_imovel: str) -> list[dict]:
     except Exception as exc:
         logger.warning(f"Falha ao buscar focos por propriedade ({cod_imovel}): {exc}")
     return []
+
+
+async def buscar_areas_protegidas_por_propriedade(cod_imovel: str) -> dict:
+    """UCs, TIs, Assentamentos e Quilombolas que interceptam a propriedade."""
+    result = {"uc": [], "ti": [], "assentamento": [], "quilombola": []}
+    endpoints = {
+        "uc": "unidade-conservacao",
+        "ti": "terra-indigena",
+        "assentamento": "assentamento",
+        "quilombola": "quilombola",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            for chave, path in endpoints.items():
+                resp = await client.get(
+                    f"{GERENCIAMENTO_BANCO_URL}/banco/{path}/por-propriedade/{cod_imovel}"
+                )
+                if resp.status_code == 200:
+                    result[chave] = resp.json()
+    except Exception as exc:
+        logger.warning(f"Falha ao buscar áreas protegidas por propriedade ({cod_imovel}): {exc}")
+    return result
