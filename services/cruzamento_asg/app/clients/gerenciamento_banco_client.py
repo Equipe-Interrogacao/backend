@@ -67,22 +67,31 @@ async def buscar_focos_por_propriedade(cod_imovel: str) -> list[dict]:
 
 
 async def buscar_areas_protegidas_por_propriedade(cod_imovel: str) -> dict:
-    """UCs, TIs, Assentamentos e Quilombolas que interceptam a propriedade."""
-    result = {"uc": [], "ti": [], "assentamento": [], "quilombola": []}
-    endpoints = {
-        "uc": "unidade-conservacao",
-        "ti": "terra-indigena",
-        "assentamento": "assentamento",
-        "quilombola": "quilombola",
-    }
+    """UCs, TIs, Assentamentos e Quilombolas que interceptam a propriedade (paralelo)."""
+    import asyncio
+
+    chaves = ["uc", "ti", "assentamento", "quilombola"]
+    paths = ["unidade-conservacao", "terra-indigena", "assentamento", "quilombola"]
+    result: dict = {k: [] for k in chaves}
+
+    async def _fetch(client: httpx.AsyncClient, chave: str, path: str) -> tuple[str, list]:
+        try:
+            resp = await client.get(
+                f"{GERENCIAMENTO_BANCO_URL}/banco/{path}/por-propriedade/{cod_imovel}"
+            )
+            if resp.status_code == 200:
+                return chave, resp.json()
+        except Exception as exc:
+            logger.warning(f"Falha ao buscar {chave} por propriedade ({cod_imovel}): {exc}")
+        return chave, []
+
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            for chave, path in endpoints.items():
-                resp = await client.get(
-                    f"{GERENCIAMENTO_BANCO_URL}/banco/{path}/por-propriedade/{cod_imovel}"
-                )
-                if resp.status_code == 200:
-                    result[chave] = resp.json()
+            resultados = await asyncio.gather(
+                *[_fetch(client, chave, path) for chave, path in zip(chaves, paths)]
+            )
+        for chave, dados in resultados:
+            result[chave] = dados
     except Exception as exc:
         logger.warning(f"Falha ao buscar áreas protegidas por propriedade ({cod_imovel}): {exc}")
     return result
