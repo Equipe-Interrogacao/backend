@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from app.routes.asg_routes import router
+from app.config.database import Base, engine
+from app.models.analise_asg import AnaliseASG
 
 tags_metadata = [
     {
@@ -25,3 +27,6 @@ app = FastAPI(
 )
 
 app.include_router(router)
+
+# Ensure DB tables exist when the app starts (useful for local/dev Docker)
+Base.metadata.create_all(bind=engine)

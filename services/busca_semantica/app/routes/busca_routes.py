@@ -30,3 +30,14 @@ async def consultar(payload: ConsultaCreate, db: Session = Depends(get_db)):
 )
 def listar(db: Session = Depends(get_db)):
     return busca_controller.listar_consultas(db)
+
+
+@router.get(
+    "/intencoes",
+    summary="Listar intenções suportadas",
+    description="Retorna as intenções que o módulo de PLN reconhece e exemplos de palavras-chave.",
+)
+def listar_intencoes():
+    from app.services.nlp_service import obter_intencoes_documentacao
+
+    return obter_intencoes_documentacao()

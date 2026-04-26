@@ -72,6 +72,10 @@ services:
       - "8003:8000"
     env_file:
       - .env
+    environment:
+      - GERENCIAMENTO_BANCO_URL=http://controller-gerenciamento-banco:8000
+      - CRUZAMENTO_ASG_URL=http://controller-cruzamento-asg:8000
+      - RELATORIO_ASG_URL=http://controller-relatorio-asg:8000
     networks:
       - rede_asg
     depends_on:
@@ -84,6 +88,8 @@ services:
     container_name: frontend
     ports:
       - "3000:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8003
     networks:
       - rede_asg
     depends_on:
