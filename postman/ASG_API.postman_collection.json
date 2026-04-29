@@ -411,6 +411,49 @@
               "path": ["asg", "analises"]
             }
           }
+        },
+
+        {
+          "name": "Relatório ASG (JSON)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_cruzamento}}/relatorio/car/{{cod_car}}/asg",
+              "host": ["{{url_cruzamento}}"],
+              "path": ["relatorio", "car", "{{cod_car}}", "asg"]
+            },
+            "description": "Relatório consolidado: propriedade, desmatamento, queimadas, áreas protegidas, resumo ASG; campo gerado_em."
+          }
+        },
+
+        {
+          "name": "Relatório ASG — exportar GeoPackage (QGIS)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_cruzamento}}/relatorio/car/{{cod_car}}/asg/export?formato=gpkg",
+              "host": ["{{url_cruzamento}}"],
+              "path": ["relatorio", "car", "{{cod_car}}", "asg", "export"],
+              "query": [{ "key": "formato", "value": "gpkg" }]
+            },
+            "description": "Ficheiro .gpkg com camadas: imovel_car, prodes, deter, focos_queimada, areas_protegidas."
+          }
+        },
+
+        {
+          "name": "Relatório ASG — exportar GeoJSON",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_cruzamento}}/relatorio/car/{{cod_car}}/asg/export?formato=geojson",
+              "host": ["{{url_cruzamento}}"],
+              "path": ["relatorio", "car", "{{cod_car}}", "asg", "export"],
+              "query": [{ "key": "formato", "value": "geojson" }]
+            }
+          }
         }
 
       ]
