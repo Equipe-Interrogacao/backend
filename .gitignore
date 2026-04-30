@@ -75,3 +75,7 @@ coverage/
 *.mbtiles
 data/raw/
 data/processed/
+
+# ─── Backups pesados (>100 MB — não sobe pro GitHub) ──────
+scripts/backup_asg.sql
+scripts/backup_*.sql

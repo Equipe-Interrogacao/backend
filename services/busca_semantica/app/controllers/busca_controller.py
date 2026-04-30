@@ -12,9 +12,16 @@ async def realizar_consulta(payload: ConsultaCreate, db: Session):
 
 async def _gerar_resposta(pergunta: str, cod_car: str | None) -> str:
     if not cod_car:
-        return f"Pergunta recebida: {pergunta}. Informe um código CAR para consultas sobre uma propriedade específica."
+        return (
+            f"Pergunta recebida: '{pergunta}'. "
+            "Informe um código CAR para consultas sobre uma propriedade específica."
+        )
 
-    from app.clients.gerenciamento_banco_client import buscar_por_car
+    from app.clients.gerenciamento_banco_client import (
+        buscar_areas_protegidas_por_propriedade,
+        buscar_por_car,
+        buscar_stats_inpe_por_propriedade,
+    )
     propriedade = await buscar_por_car(cod_car)
 
     if not propriedade:
@@ -24,16 +31,59 @@ async def _gerar_resposta(pergunta: str, cod_car: str | None) -> str:
         )
 
     municipio = propriedade.get("municipio") or "município não informado"
-    uf = propriedade.get("uf") or "UF não informada"
+    uf = propriedade.get("uf") or "SP"
     area = propriedade.get("area")
     status = propriedade.get("status_imovel") or "status desconhecido"
 
     area_info = f", área de {area:.2f} ha" if area else ""
-    return (
-        f"Propriedade {cod_car} localizada em {municipio}/{uf}{area_info}. "
-        f"Status CAR: {status}. "
-        f"Pergunta registrada: {pergunta}"
-    )
+
+    inpe = await buscar_stats_inpe_por_propriedade(cod_car)
+    areas = await buscar_areas_protegidas_por_propriedade(cod_car)
+
+    partes = [
+        f"Propriedade {cod_car} localizada em {municipio}/{uf}{area_info}.",
+        f"Status CAR: {status}.",
+    ]
+
+    if inpe["prodes_area_ha"] > 0:
+        partes.append(
+            f"Desmatamento PRODES DENTRO da propriedade: {inpe['prodes_poligonos']} polígono(s), "
+            f"área real de {inpe['prodes_area_ha']} ha."
+        )
+    if inpe["deter"] > 0:
+        partes.append(
+            f"Alertas DETER sobrepostos à propriedade: {inpe['deter']} alerta(s)."
+        )
+    if inpe["focos"] > 0:
+        partes.append(
+            f"Focos de queimada dentro da propriedade: "
+            f"{inpe['focos']} foco(s) detectado(s) (2016–2025)."
+        )
+    if inpe["prodes_area_ha"] == 0 and inpe["deter"] == 0 and inpe["focos"] == 0:
+        partes.append(
+            "Nenhuma sobreposição INPE (PRODES/DETER/Queimadas) encontrada para esta propriedade."
+        )
+
+    n_uc = len(areas.get("uc", []))
+    n_ti = len(areas.get("ti", []))
+    n_ass = len(areas.get("assentamento", []))
+    n_qui = len(areas.get("quilombola", []))
+
+    if n_uc > 0:
+        nomes_uc = ", ".join(u.get("nome") or u.get("cod_uc") for u in areas["uc"][:3])
+        partes.append(f"Unidades de Conservação sobrepostas: {n_uc} ({nomes_uc}).")
+    if n_ti > 0:
+        nomes_ti = ", ".join(t.get("nome") or t.get("cod_ti") for t in areas["ti"][:3])
+        partes.append(f"Terras Indígenas sobrepostas: {n_ti} ({nomes_ti}).")
+    if n_ass > 0:
+        nomes_ass = ", ".join(a.get("nome") or a.get("cod_sipra") for a in areas["assentamento"][:3])
+        partes.append(f"Assentamentos sobrepostos: {n_ass} ({nomes_ass}).")
+    if n_qui > 0:
+        nomes_qui = ", ".join(q.get("nome") or q.get("cod_quilombola") for q in areas["quilombola"][:3])
+        partes.append(f"Territórios Quilombolas sobrepostos: {n_qui} ({nomes_qui}).")
+
+    partes.append(f"Pergunta registrada: {pergunta}")
+    return " ".join(partes)
 
 
 def listar_consultas(db: Session):
