@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.controllers import asg_controller
 from app.schemas.asg_schema import AnaliseASGBase, AnaliseASGResponse
+from app.schemas.relatorio_asg_schema import RelatorioIndicadoresResponse
+from app.services.relatorio_asg_service import gerar_relatorio
 
 router = APIRouter(prefix="/asg", tags=["Cruzamento ASG"])
 
@@ -29,6 +31,24 @@ def listar(db: Session = Depends(get_db)):
 )
 def buscar(cod_car: str, db: Session = Depends(get_db)):
     return asg_controller.buscar_analise(cod_car, db)
+
+
+@router.get(
+    "/relatorio/{cod_imovel:path}",
+    response_model=RelatorioIndicadoresResponse,
+    summary="Relatório ASG completo por propriedade",
+    description=(
+        "Compõe indicadores ASG (Ambiental, Social, Governança) para a propriedade "
+        "combinando dados INPE (PRODES, DETER, Queimadas) e Áreas Protegidas "
+        "(UC, TI, Assentamento, Quilombola). Cada indicador inclui fonte e data de referência."
+    ),
+    responses={404: {"description": "Propriedade não encontrada"}},
+)
+async def relatorio_asg(cod_imovel: str):
+    relatorio = await gerar_relatorio(cod_imovel)
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Propriedade não encontrada")
+    return relatorio
 
 
 @router.post(

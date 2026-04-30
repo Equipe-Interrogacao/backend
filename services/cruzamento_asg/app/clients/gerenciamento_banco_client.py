@@ -67,9 +67,9 @@ async def buscar_focos_por_propriedade(cod_imovel: str) -> list[dict]:
 
 
 async def buscar_prodes_por_propriedade(cod_imovel: str) -> list[dict]:
-    """Polígonos PRODES que interceptam a propriedade (inclui geometria GeoJSON)."""
+    """Polígonos PRODES que interceptam a propriedade (com geometria para export)."""
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.get(
                 f"{GERENCIAMENTO_BANCO_URL}/banco/desmatamento-prodes/por-propriedade/{cod_imovel}"
             )
@@ -77,13 +77,4 @@ async def buscar_prodes_por_propriedade(cod_imovel: str) -> list[dict]:
                 return resp.json()
     except Exception as exc:
         logger.warning(f"Falha ao buscar PRODES por propriedade ({cod_imovel}): {exc}")
-    return []
-
-
-async def buscar_areas_protegidas_por_propriedade(cod_imovel: str) -> list[dict]:
-    """
-    Sobreposições com áreas protegidas (Task 8).
-    Quando o endpoint existir no gerenciamento_banco, alterar a URL; até lá retorna [].
-    """
-    _ = cod_imovel
     return []

@@ -323,15 +323,16 @@
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "{{url_ingestao}}/ingestao/inpe/queimadas/ingerir?estado=SP&ano=2024",
+              "raw": "{{url_ingestao}}/ingestao/inpe/queimadas/ingerir?estado=SP&ano_inicio=2016&ano_fim=2026",
               "host": ["{{url_ingestao}}"],
               "path": ["ingestao", "inpe", "queimadas", "ingerir"],
               "query": [
-                { "key": "estado", "value": "SP"   },
-                { "key": "ano",    "value": "2024" }
+                { "key": "estado",     "value": "SP"   },
+                { "key": "ano_inicio", "value": "2016" },
+                { "key": "ano_fim",    "value": "2026" }
               ]
             },
-            "description": "Ingestão de focos de incêndio do BDQueimadas filtrados por estado e ano. Retorna 202."
+            "description": "Ingestão de focos de incêndio do BDQueimadas filtrados por estado e intervalo de anos (2016–2026). Retorna 202."
           }
         },
 
@@ -359,6 +360,125 @@
               "path": ["ingestao", "inpe", "prodes", "status"]
             },
             "description": "Rota genérica: substitua 'prodes' por 'deter' ou 'queimadas'."
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "Ingestão — Áreas Protegidas (:8001)",
+      "item": [
+
+        {
+          "name": "UC — Iniciar ingestão (ICMBio)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/areas-protegidas/uc/ingerir?uf=SP",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "areas-protegidas", "uc", "ingerir"],
+              "query": [{ "key": "uf", "value": "SP" }]
+            },
+            "description": "Ingestão de Unidades de Conservação (ICMBio/CNUC) via WFS. Filtro por siglaUF. Retorna 202."
+          }
+        },
+
+        {
+          "name": "UC — Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/areas-protegidas/uc/status",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "areas-protegidas", "uc", "status"]
+            }
+          }
+        },
+
+        {
+          "name": "TI — Iniciar ingestão (FUNAI)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/areas-protegidas/ti/ingerir?uf=SP",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "areas-protegidas", "ti", "ingerir"],
+              "query": [{ "key": "uf", "value": "SP" }]
+            },
+            "description": "Ingestão de Terras Indígenas (FUNAI) via WFS. Filtro por uf_sigla. Retorna 202."
+          }
+        },
+
+        {
+          "name": "TI — Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/areas-protegidas/ti/status",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "areas-protegidas", "ti", "status"]
+            }
+          }
+        },
+
+        {
+          "name": "Assentamento — Iniciar ingestão (INCRA)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/areas-protegidas/assentamento/ingerir?uf=SP",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "areas-protegidas", "assentamento", "ingerir"],
+              "query": [{ "key": "uf", "value": "SP" }]
+            },
+            "description": "Ingestão de Projetos de Assentamento (INCRA) via WFS. Filtro por sg_uf. Retorna 202."
+          }
+        },
+
+        {
+          "name": "Assentamento — Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/areas-protegidas/assentamento/status",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "areas-protegidas", "assentamento", "status"]
+            }
+          }
+        },
+
+        {
+          "name": "Quilombola — Iniciar ingestão (FCP)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/areas-protegidas/quilombola/ingerir?uf=SP",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "areas-protegidas", "quilombola", "ingerir"],
+              "query": [{ "key": "uf", "value": "SP" }]
+            },
+            "description": "Ingestão de Territórios Quilombolas (FCP/INCRA) via WFS. Filtro por sg_uf. Retorna 202."
+          }
+        },
+
+        {
+          "name": "Quilombola — Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url_ingestao}}/ingestao/areas-protegidas/quilombola/status",
+              "host": ["{{url_ingestao}}"],
+              "path": ["ingestao", "areas-protegidas", "quilombola", "status"]
+            }
           }
         }
 
