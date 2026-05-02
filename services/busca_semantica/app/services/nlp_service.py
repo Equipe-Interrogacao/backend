@@ -33,6 +33,12 @@ INTENTS = {
         "endpoint_template": "/asg/analises/{id}",
         "default_params": {},
     },
+    "governanca": {
+        "keywords": ["governança", "governanca", "status", "incra", "car"],
+        "service": "cruzamento_asg",
+        "endpoint_template": "/asg/analises/{id}",
+        "default_params": {},
+    },
     "relatorio": {
         "keywords": ["relatório", "relatorio", "asg", "resumo"],
         "service": "relatorio_asg",
