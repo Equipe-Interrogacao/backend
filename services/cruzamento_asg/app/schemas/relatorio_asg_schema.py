@@ -1,4 +1,4 @@
-﻿"""
+"""
 Schemas Pydantic para os dois endpoints de relatório ASG:
   - RelatorioASGResponse         → Task 9: consolidado com seções + índice de risco
   - RelatorioIndicadoresResponse → Task 10: cards simples para o frontend

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Exportação GPKG (OGC Geopackage) e GeoJSON (RFC 7946) a partir de dados brutos do relatório.
 Nomes de camada centralizados para alinhamento com o time.
 """
