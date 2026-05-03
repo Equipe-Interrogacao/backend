@@ -77,7 +77,7 @@ services:
     environment:
       - GERENCIAMENTO_BANCO_URL=http://controller-gerenciamento-banco:8000
       - CRUZAMENTO_ASG_URL=http://controller-cruzamento-asg:8000
-      - RELATORIO_ASG_URL=http://controller-relatorio-asg:8000
+      - RELATORIO_ASG_URL=http://controller-cruzamento-asg:8000
     networks:
       - rede_asg
     depends_on:
