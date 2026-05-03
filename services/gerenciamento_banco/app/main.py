@@ -11,6 +11,7 @@ from app.config.database import engine, Base, get_db
 from app.routes.banco_routes import router
 from app.routes.imovel_routes import router as imovel_router
 from app.routes.inpe_routes import router as inpe_router
+from app.routes.admin_routes import router as admin_router
 from app.routes.areas_protegidas_routes import router as areas_protegidas_router
 
 # Registra modelos no metadata antes do create_all
@@ -72,6 +73,7 @@ app = FastAPI(
 app.include_router(router)
 app.include_router(imovel_router)
 app.include_router(inpe_router)
+app.include_router(admin_router)
 app.include_router(areas_protegidas_router)
 
 
