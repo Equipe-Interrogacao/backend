@@ -66,6 +66,20 @@ async def buscar_focos_por_propriedade(cod_imovel: str) -> list[dict]:
     return []
 
 
+async def buscar_prodes_por_propriedade(cod_imovel: str) -> list[dict]:
+    """Polígonos PRODES que interceptam a propriedade (com geometria para export)."""
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.get(
+                f"{GERENCIAMENTO_BANCO_URL}/banco/desmatamento-prodes/por-propriedade/{cod_imovel}"
+            )
+            if resp.status_code == 200:
+                return resp.json()
+    except Exception as exc:
+        logger.warning(f"Falha ao buscar PRODES por propriedade ({cod_imovel}): {exc}")
+    return []
+
+
 async def buscar_areas_protegidas_por_propriedade(cod_imovel: str) -> dict:
     """UCs, TIs, Assentamentos e Quilombolas que interceptam a propriedade (paralelo)."""
     import asyncio
