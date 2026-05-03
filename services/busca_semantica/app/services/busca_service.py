@@ -12,4 +12,4 @@ class BuscaService:
         return consulta
 
     def listar_consultas(self, db: Session):
-        return db.query(Consulta).all()
+        return db.query(Consulta).order_by(Consulta.id.desc()).all()
