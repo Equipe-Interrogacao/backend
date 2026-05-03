@@ -26,8 +26,7 @@ async def realizar_consulta(payload: ConsultaCreate, db: Session):
         )
         resposta_text = (
             "Não consegui identificar a intenção da sua pergunta. "
-            f"Tente usar palavras como: {exemplos}. "
-            "Consulte GET /busca/intencoes para a lista completa."
+            f"Tente usar palavras como: {exemplos}."
         )
     else:
         intent_meta = nlp_service.INTENTS.get(intencao, {})
