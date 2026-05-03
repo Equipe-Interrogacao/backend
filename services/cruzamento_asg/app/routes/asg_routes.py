@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.controllers import asg_controller
 from app.schemas.asg_schema import AnaliseASGBase, AnaliseASGResponse
-from app.schemas.relatorio_asg_schema import RelatorioASGResponse
+from app.schemas.relatorio_asg_schema import RelatorioIndicadoresResponse
 from app.services.relatorio_asg_service import gerar_relatorio
 
 router = APIRouter(prefix="/asg", tags=["Cruzamento ASG"])
@@ -35,7 +35,7 @@ def buscar(cod_car: str, db: Session = Depends(get_db)):
 
 @router.get(
     "/relatorio/{cod_imovel:path}",
-    response_model=RelatorioASGResponse,
+    response_model=RelatorioIndicadoresResponse,
     summary="Relatório ASG completo por propriedade",
     description=(
         "Compõe indicadores ASG (Ambiental, Social, Governança) para a propriedade "
