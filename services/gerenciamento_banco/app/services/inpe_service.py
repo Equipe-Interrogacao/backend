@@ -214,3 +214,41 @@ class InpeService:
             .all()
         )
         return [{"ano": int(r[0]) if r[0] else None, "total": r[1]} for r in rows]
+
+    # ── Rankings por município ─────────────────────────────────────────────────
+
+    def ranking_municipios_deter(self, db: Session, uf: str = "SP", limit: int = 10):
+        rows = (
+            db.query(AlertaDeter.municipio, func.count(AlertaDeter.id).label("total"))
+            .filter(AlertaDeter.uf == uf.upper())
+            .filter(AlertaDeter.municipio.isnot(None))
+            .group_by(AlertaDeter.municipio)
+            .order_by(func.count(AlertaDeter.id).desc())
+            .limit(limit)
+            .all()
+        )
+        return [{"municipio": r[0], "total": r[1]} for r in rows]
+
+    def ranking_municipios_prodes(self, db: Session, uf: str = "SP", limit: int = 10):
+        rows = (
+            db.query(DesmatamentoProdes.municipio, func.count(DesmatamentoProdes.id).label("total"))
+            .filter(DesmatamentoProdes.uf == uf.upper())
+            .filter(DesmatamentoProdes.municipio.isnot(None))
+            .group_by(DesmatamentoProdes.municipio)
+            .order_by(func.count(DesmatamentoProdes.id).desc())
+            .limit(limit)
+            .all()
+        )
+        return [{"municipio": r[0], "total": r[1]} for r in rows]
+
+    def ranking_municipios_focos(self, db: Session, estado: str = "SP", limit: int = 10):
+        rows = (
+            db.query(FocoQueimada.municipio, func.count(FocoQueimada.id).label("total"))
+            .filter(FocoQueimada.estado == estado.upper())
+            .filter(FocoQueimada.municipio.isnot(None))
+            .group_by(FocoQueimada.municipio)
+            .order_by(func.count(FocoQueimada.id).desc())
+            .limit(limit)
+            .all()
+        )
+        return [{"municipio": r[0], "total": r[1]} for r in rows]

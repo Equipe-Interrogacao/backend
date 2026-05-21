@@ -44,6 +44,18 @@ def stats_prodes(
 
 
 @router.get(
+    "/desmatamento-prodes/ranking-municipios",
+    summary="Top municípios por quantidade de polígonos PRODES",
+)
+def ranking_prodes(
+    uf: str = Query("SP"),
+    limit: int = Query(10, ge=1, le=50),
+    db: Session = Depends(get_db),
+):
+    return inpe_controller.ranking_municipios_prodes(db, uf, limit)
+
+
+@router.get(
     "/desmatamento-prodes/por-propriedade/{cod_imovel:path}",
     response_model=list[DesmatamentoProdesResponse],
     summary="PRODES que interceptam a propriedade (ST_Intersects)",
@@ -99,6 +111,18 @@ def listar_deter(
 
 
 @router.get(
+    "/alerta-deter/ranking-municipios",
+    summary="Top municípios por quantidade de alertas DETER",
+)
+def ranking_deter(
+    uf: str = Query("SP"),
+    limit: int = Query(10, ge=1, le=50),
+    db: Session = Depends(get_db),
+):
+    return inpe_controller.ranking_municipios_deter(db, uf, limit)
+
+
+@router.get(
     "/alerta-deter/por-propriedade/{cod_imovel:path}",
     response_model=list[AlertaDeterResponse],
     summary="Alertas DETER que interceptam a propriedade (ST_Intersects)",
@@ -134,6 +158,18 @@ def listar_focos(
     db: Session = Depends(get_db),
 ):
     return inpe_controller.listar_focos(db, estado, municipio, bioma, ano, limit, offset)
+
+
+@router.get(
+    "/foco-queimada/ranking-municipios",
+    summary="Top municípios por quantidade de focos de queimada",
+)
+def ranking_focos(
+    estado: str = Query("SP"),
+    limit: int = Query(10, ge=1, le=50),
+    db: Session = Depends(get_db),
+):
+    return inpe_controller.ranking_municipios_focos(db, estado, limit)
 
 
 @router.get(
