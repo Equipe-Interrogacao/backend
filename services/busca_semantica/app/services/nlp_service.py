@@ -3,11 +3,49 @@ import json
 import logging
 import pathlib
 import unicodedata
+import numpy as np
 from difflib import get_close_matches as _gcm
 from typing import Optional, Tuple, Dict, List
 
 logger = logging.getLogger(__name__)
 
+# ── Modelos Word2Vec + MLP (padrão do professor) ──────────────────────────────
+_MODEL_DIR = pathlib.Path(__file__).parent.parent.parent / "models"
+_w2v_model = None
+_intent_clf = None
+_tfidf = None
+
+try:
+    from gensim.models import Word2Vec as _Word2Vec
+    import joblib as _joblib
+    _w2v_model  = _Word2Vec.load(str(_MODEL_DIR / "word2vec.model"))
+    _intent_clf = _joblib.load(_MODEL_DIR / "intent_clf.joblib")
+    _tfidf      = _joblib.load(_MODEL_DIR / "tfidf.joblib")
+    logger.info(f"Word2Vec + TF-IDF + MLPClassifier carregados — vocab: {len(_w2v_model.wv)} tokens, "
+                f"classes: {list(_intent_clf.classes_)}")
+except Exception as _e:
+    logger.warning(f"Modelos Word2Vec/MLP não encontrados ({_e}) — usando BoW como fallback.")
+
+def _w2v_representation(tokens: List[str]) -> Optional[np.ndarray]:
+    """Mean + Max pooling ponderado por IDF — mesma função do treino."""
+    if _w2v_model is None:
+        return None
+    vecs, weights = [], []
+    for t in tokens:
+        if t not in _w2v_model.wv:
+            continue
+        idf = (
+            float(_tfidf.idf_[_tfidf.vocabulary_[t]])
+            if _tfidf is not None and t in _tfidf.vocabulary_
+            else 1.0
+        )
+        vecs.append(_w2v_model.wv[t] * idf)
+        weights.append(idf)
+    if not vecs:
+        return None
+    return np.sum(vecs, axis=0) / max(sum(weights), 1e-8)
+
+# ── spaCy ─────────────────────────────────────────────────────────────────────
 try:
     import spacy as _spacy
     _nlp = _spacy.load("pt_core_news_sm")
@@ -323,6 +361,31 @@ def extrair_intencao(texto: str) -> Tuple[Optional[str], float, List[str], Optio
         if sigla in tokens_set:
             return intent_sigla, 0.9, [sigla], None
 
+    # ── Word2Vec + MLP (padrão bot_model.py do professor) ────────────────────
+    # Tenta corrigir tokens OOV antes de vetorizar (potencializa o W2V)
+    if _w2v_model is not None and _intent_clf is not None:
+        all_kw = _all_kw_tokens()
+        corrected_tokens = list(texto_tokens)
+        w2v_corr: Optional[Tuple[str, str]] = None
+        for i, tk in enumerate(corrected_tokens):
+            if tk not in _w2v_model.wv and len(tk) >= 5:
+                m = _gcm(tk, all_kw, n=1, cutoff=0.82)
+                if m and m[0] != tk:
+                    if w2v_corr is None:
+                        w2v_corr = (tk, m[0])
+                    corrected_tokens[i] = m[0]
+
+        vec = _w2v_representation(corrected_tokens)
+        if vec is not None:
+            proba = _intent_clf.predict_proba([vec])[0]
+            best_idx = int(np.argmax(proba))
+            conf    = float(proba[best_idx])
+            # Threshold mínimo — abaixo de 0.35 cai para BoW (mais seguro)
+            if conf >= 0.35:
+                intent = _intent_clf.classes_[best_idx]
+                return intent, round(conf, 2), corrected_tokens, w2v_corr
+
+    # ── Fallback BoW (quando modelos não estão carregados) ────────────────────
     # Busca por frases completas (bigrams/trigrams) para keywords compostas
     texto_norm = _normalizar(texto)
 
