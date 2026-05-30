@@ -57,3 +57,29 @@ class BancoService:
             .group_by(Propriedade.uf)
             .all()
         )
+
+    def buscar_proximas_por_coordenadas(
+        self,
+        db: Session,
+        lat: float,
+        lon: float,
+        raio_m: int = 5000,
+        limit: int = 10,
+    ):
+        """Propriedades cujo polígono está dentro de raio_m metros do ponto (lat, lon)."""
+        from sqlalchemy import func, cast
+        from geoalchemy2.types import Geography
+
+        ponto = func.ST_SetSRID(func.ST_MakePoint(lon, lat), 4326)
+        return (
+            db.query(Propriedade)
+            .filter(
+                func.ST_DWithin(
+                    cast(Propriedade.geometria, Geography),
+                    cast(ponto, Geography),
+                    raio_m,
+                )
+            )
+            .limit(limit)
+            .all()
+        )

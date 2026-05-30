@@ -51,3 +51,7 @@ def deletar_propriedade(id: int, db: Session):
 def stats_por_uf(db: Session):
     rows = service.contar_por_uf(db)
     return [{"uf": r[0], "total": r[1]} for r in rows]
+
+
+def buscar_proximas(lat: float, lon: float, raio_m: int, limit: int, db: Session):
+    return service.buscar_proximas_por_coordenadas(db, lat, lon, raio_m, limit)

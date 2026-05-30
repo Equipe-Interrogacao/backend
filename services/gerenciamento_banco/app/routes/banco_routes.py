@@ -47,6 +47,22 @@ def buscar_por_car(cod_imovel: str, db: Session = Depends(get_db)):
 
 
 @router.get(
+    "/propriedades/proximas",
+    response_model=list[PropriedadeResponse],
+    summary="Propriedades próximas por coordenadas",
+    description="Retorna propriedades cujo polígono está dentro do raio informado (metros).",
+)
+def proximas(
+    lat: float = Query(..., description="Latitude (ex: -23.5505)"),
+    lon: float = Query(..., description="Longitude (ex: -46.6333)"),
+    raio_m: int = Query(5000, ge=100, le=50000, description="Raio em metros"),
+    limit: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    return banco_controller.buscar_proximas(lat, lon, raio_m, limit, db)
+
+
+@router.get(
     "/propriedades/{id}",
     response_model=PropriedadeResponse,
     summary="Buscar por ID interno",
