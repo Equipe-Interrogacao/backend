@@ -89,13 +89,14 @@ def buscar_prodes(id_poligono: str, db: Session = Depends(get_db)):
 )
 def listar_deter(
     uf: Optional[str] = Query("SP", description="Sigla do estado"),
+    ano: Optional[int] = Query(None, description="Ano de detecção (extraído de view_date)"),
     municipio: Optional[str] = Query(None, description="Nome parcial do município"),
     classname: Optional[str] = Query(None, description="Classe do alerta"),
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
 ):
-    return inpe_controller.listar_deter(db, uf, municipio, classname, limit, offset)
+    return inpe_controller.listar_deter(db, uf, ano, municipio, classname, limit, offset)
 
 
 @router.get(

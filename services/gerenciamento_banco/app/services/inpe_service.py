@@ -27,7 +27,6 @@ def _prop_geom_subq(cod_imovel: str):
 
 class InpeService:
 
-    # ───────────────────────────────────────────────── PRODES — por propriedade
 
     def listar_prodes_por_propriedade(self, db: Session, cod_imovel: str) -> list:
         """Polígonos PRODES que interceptam exatamente a geometria da propriedade."""
@@ -89,7 +88,7 @@ class InpeService:
 
         return {"n_poligonos": n, "area_ha": area_ha, "por_ano": por_ano}
 
-    # ───────────────────────────────────────────────── DETER — por propriedade
+
 
     def listar_deter_por_propriedade(self, db: Session, cod_imovel: str) -> list:
         """Alertas DETER que interceptam a geometria da propriedade."""
@@ -110,8 +109,6 @@ class InpeService:
             .filter(func.ST_Within(FocoQueimada.geometria, geom))
             .all()
         )
-
-    # ─────────────────────────────────────────── PRODES — filtros textuais
 
     def listar_prodes(
         self,
@@ -159,6 +156,7 @@ class InpeService:
         self,
         db: Session,
         uf: str | None = None,
+        ano: int | None = None,
         municipio: str | None = None,
         classname: str | None = None,
         limit: int = 100,
@@ -167,6 +165,8 @@ class InpeService:
         q = db.query(AlertaDeter)
         if uf:
             q = q.filter(AlertaDeter.uf == uf.upper())
+        if ano:
+            q = q.filter(func.extract("year", AlertaDeter.view_date) == ano)
         if municipio:
             q = q.filter(AlertaDeter.municipio.ilike(f"%{municipio}%"))
         if classname:

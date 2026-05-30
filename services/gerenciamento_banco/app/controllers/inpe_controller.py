@@ -32,8 +32,8 @@ def stats_prodes(db: Session, uf: str = "SP"):
 
 # ------------------------------------------------------------------- DETER
 
-def listar_deter(db, uf, municipio, classname, limit, offset):
-    return service.listar_deter(db, uf, municipio, classname, limit, offset)
+def listar_deter(db, uf, ano, municipio, classname, limit, offset):
+    return service.listar_deter(db, uf, ano, municipio, classname, limit, offset)
 
 
 def listar_deter_por_propriedade(cod_imovel: str, db: Session):
