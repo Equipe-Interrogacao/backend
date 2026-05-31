@@ -46,6 +46,56 @@ async def buscar_areas_protegidas_por_propriedade(cod_imovel: str) -> dict:
     return result
 
 
+async def buscar_propriedades_proximas(
+    lat: float, lon: float, raio_m: int = 5000, limit: int = 5
+) -> list:
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(
+                f"{GERENCIAMENTO_BANCO_URL}/banco/propriedades/proximas",
+                params={"lat": lat, "lon": lon, "raio_m": raio_m, "limit": limit},
+            )
+            if resp.status_code == 200:
+                return resp.json()
+    except Exception as exc:
+        logger.warning(f"Falha ao buscar propriedades próximas ({lat}, {lon}): {exc}")
+    return []
+
+
+async def buscar_ranking_municipios(fonte: str, uf: str = "SP", limit: int = 10) -> list:
+    """fonte: 'deter' | 'prodes' | 'focos'"""
+    path_map = {
+        "deter":  f"/banco/alerta-deter/ranking-municipios?uf={uf}&limit={limit}",
+        "prodes": f"/banco/desmatamento-prodes/ranking-municipios?uf={uf}&limit={limit}",
+        "focos":  f"/banco/foco-queimada/ranking-municipios?estado={uf}&limit={limit}",
+    }
+    path = path_map.get(fonte)
+    if not path:
+        return []
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(f"{GERENCIAMENTO_BANCO_URL}{path}")
+            if resp.status_code == 200:
+                return resp.json()
+    except Exception as exc:
+        logger.warning(f"Falha ao buscar ranking municípios ({fonte}): {exc}")
+    return []
+
+
+async def buscar_propriedades_por_municipio(municipio: str, uf: str = "SP", limit: int = 10) -> list:
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                f"{GERENCIAMENTO_BANCO_URL}/banco/propriedades",
+                params={"municipio": municipio, "uf": uf, "limit": limit},
+            )
+            if resp.status_code == 200:
+                return resp.json()
+    except Exception as exc:
+        logger.warning(f"Falha ao buscar propriedades por município ({municipio}): {exc}")
+    return []
+
+
 async def buscar_stats_inpe_por_propriedade(cod_imovel: str) -> dict:
     """
     Retorna resumo de sobreposição INPE para a propriedade usando queries espaciais
@@ -70,6 +120,7 @@ async def buscar_stats_inpe_por_propriedade(cod_imovel: str) -> dict:
 
             r_focos = await client.get(
                 f"{GERENCIAMENTO_BANCO_URL}/banco/foco-queimada/por-propriedade/{cod_imovel}",
+                params={"buffer_m": 10000},
             )
             if r_focos.status_code == 200:
                 stats["focos"] = len(r_focos.json())

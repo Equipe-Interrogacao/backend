@@ -13,7 +13,9 @@ class BancoService:
         status_imovel: str | None = None,
         limit: int = 100,
         offset: int = 0,
+        bbox: tuple | None = None,
     ):
+        from sqlalchemy import func
         query = db.query(Propriedade)
         if uf:
             query = query.filter(Propriedade.uf == uf.upper())
@@ -21,6 +23,10 @@ class BancoService:
             query = query.filter(Propriedade.municipio.ilike(f"%{municipio}%"))
         if status_imovel:
             query = query.filter(Propriedade.status_imovel == status_imovel.upper())
+        if bbox:
+            lon_min, lat_min, lon_max, lat_max = bbox
+            envelope = func.ST_MakeEnvelope(lon_min, lat_min, lon_max, lat_max, 4326)
+            query = query.filter(func.ST_Intersects(Propriedade.geometria, envelope))
         return query.offset(offset).limit(limit).all()
 
     def buscar_por_id(self, db: Session, id: int):
@@ -55,5 +61,31 @@ class BancoService:
         return (
             db.query(Propriedade.uf, func.count(Propriedade.id).label("total"))
             .group_by(Propriedade.uf)
+            .all()
+        )
+
+    def buscar_proximas_por_coordenadas(
+        self,
+        db: Session,
+        lat: float,
+        lon: float,
+        raio_m: int = 5000,
+        limit: int = 10,
+    ):
+        """Propriedades cujo polígono está dentro de raio_m metros do ponto (lat, lon)."""
+        from sqlalchemy import func, cast
+        from geoalchemy2.types import Geography
+
+        ponto = func.ST_SetSRID(func.ST_MakePoint(lon, lat), 4326)
+        return (
+            db.query(Propriedade)
+            .filter(
+                func.ST_DWithin(
+                    cast(Propriedade.geometria, Geography),
+                    cast(ponto, Geography),
+                    raio_m,
+                )
+            )
+            .limit(limit)
             .all()
         )

@@ -19,12 +19,13 @@ def listar(
     uf: Optional[str] = Query(None, description="Sigla do estado (ex: SP)"),
     municipio: Optional[str] = Query(None, description="Nome parcial do município"),
     status_imovel: Optional[str] = Query(None, description="Status: AT, PE, CA, SU"),
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(100, ge=1, le=2000),
     offset: int = Query(0, ge=0),
+    bbox: Optional[str] = Query(None, description="Bounding box: lon_min,lat_min,lon_max,lat_max"),
     db: Session = Depends(get_db),
 ):
     return banco_controller.listar_propriedades(
-        db, uf, municipio, status_imovel, limit, offset
+        db, uf, municipio, status_imovel, limit, offset, bbox
     )
 
 
@@ -44,6 +45,22 @@ def stats(db: Session = Depends(get_db)):
 )
 def buscar_por_car(cod_imovel: str, db: Session = Depends(get_db)):
     return banco_controller.buscar_por_cod_imovel(cod_imovel, db)
+
+
+@router.get(
+    "/propriedades/proximas",
+    response_model=list[PropriedadeResponse],
+    summary="Propriedades próximas por coordenadas",
+    description="Retorna propriedades cujo polígono está dentro do raio informado (metros).",
+)
+def proximas(
+    lat: float = Query(..., description="Latitude (ex: -23.5505)"),
+    lon: float = Query(..., description="Longitude (ex: -46.6333)"),
+    raio_m: int = Query(5000, ge=100, le=50000, description="Raio em metros"),
+    limit: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    return banco_controller.buscar_proximas(lat, lon, raio_m, limit, db)
 
 
 @router.get(

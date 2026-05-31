@@ -66,3 +66,15 @@ def buscar_foco(id_foco: str, db: Session):
 
 def stats_focos(db: Session, estado: str = "SP"):
     return service.stats_focos(db, estado)
+
+
+def ranking_municipios_deter(db: Session, uf: str = "SP", limit: int = 10):
+    return service.ranking_municipios_deter(db, uf, limit)
+
+
+def ranking_municipios_prodes(db: Session, uf: str = "SP", limit: int = 10):
+    return service.ranking_municipios_prodes(db, uf, limit)
+
+
+def ranking_municipios_focos(db: Session, estado: str = "SP", limit: int = 10):
+    return service.ranking_municipios_focos(db, estado, limit)
