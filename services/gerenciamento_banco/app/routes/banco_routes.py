@@ -19,12 +19,13 @@ def listar(
     uf: Optional[str] = Query(None, description="Sigla do estado (ex: SP)"),
     municipio: Optional[str] = Query(None, description="Nome parcial do município"),
     status_imovel: Optional[str] = Query(None, description="Status: AT, PE, CA, SU"),
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(100, ge=1, le=2000),
     offset: int = Query(0, ge=0),
+    bbox: Optional[str] = Query(None, description="Bounding box: lon_min,lat_min,lon_max,lat_max"),
     db: Session = Depends(get_db),
 ):
     return banco_controller.listar_propriedades(
-        db, uf, municipio, status_imovel, limit, offset
+        db, uf, municipio, status_imovel, limit, offset, bbox
     )
 
 

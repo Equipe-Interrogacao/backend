@@ -12,7 +12,16 @@ def listar_propriedades(
     status_imovel: str | None,
     limit: int,
     offset: int,
+    bbox: str | None = None,
 ):
+    parsed_bbox = None
+    if bbox:
+        try:
+            parts = [float(x) for x in bbox.split(",")]
+            if len(parts) == 4:
+                parsed_bbox = tuple(parts)
+        except ValueError:
+            pass
     return service.listar_propriedades(
         db,
         uf=uf,
@@ -20,6 +29,7 @@ def listar_propriedades(
         status_imovel=status_imovel,
         limit=limit,
         offset=offset,
+        bbox=parsed_bbox,
     )
 
 

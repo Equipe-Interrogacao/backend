@@ -161,6 +161,11 @@ async def realizar_consulta(payload: ConsultaCreate, db: Session):
         return _montar_resposta(consulta_obj, pergunta, resposta_text, cod_car,
                                 intencao, confianca, dados, acao, municipio, list(coordenadas), _nota_correcao)
 
+    # CAR fornecido sem intenção explícita → relatório ASG completo como padrão
+    if cod_car and not intencao:
+        intencao = "relatorio"
+        confianca = 0.75
+
     # ── Sem intenção ASG — tenta responder com contexto disponível ───────────
     if not intencao:
         if municipio:

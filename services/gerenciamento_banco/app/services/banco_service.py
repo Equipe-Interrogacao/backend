@@ -13,7 +13,9 @@ class BancoService:
         status_imovel: str | None = None,
         limit: int = 100,
         offset: int = 0,
+        bbox: tuple | None = None,
     ):
+        from sqlalchemy import func
         query = db.query(Propriedade)
         if uf:
             query = query.filter(Propriedade.uf == uf.upper())
@@ -21,6 +23,10 @@ class BancoService:
             query = query.filter(Propriedade.municipio.ilike(f"%{municipio}%"))
         if status_imovel:
             query = query.filter(Propriedade.status_imovel == status_imovel.upper())
+        if bbox:
+            lon_min, lat_min, lon_max, lat_max = bbox
+            envelope = func.ST_MakeEnvelope(lon_min, lat_min, lon_max, lat_max, 4326)
+            query = query.filter(func.ST_Intersects(Propriedade.geometria, envelope))
         return query.offset(offset).limit(limit).all()
 
     def buscar_por_id(self, db: Session, id: int):
